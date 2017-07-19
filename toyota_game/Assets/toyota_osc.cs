@@ -9,7 +9,6 @@ using System.IO;
 
 namespace UnityStandardAssets.Vehicles.Car
 {
-
     public class SerialReceiver : MonoBehaviour
     {
         private static SerialPort sp = new SerialPort("COM3", 115200);
@@ -63,13 +62,15 @@ namespace UnityStandardAssets.Vehicles.Car
         }
     }
 
- 
+
 
     [RequireComponent(typeof(CarController))]
-    public class toyota_osc : MonoBehaviour
+    public class Toyota_osc : MonoBehaviour
     {
 
         #region Field
+
+
 
         public string serverId = "MaxMSP";
         public string serverIp = "127.0.0.1";
@@ -88,13 +89,15 @@ namespace UnityStandardAssets.Vehicles.Car
         public SerialReceiver SerialConnection;
 
         private int RecCount = 0;
-        private int RecTiming = 10;
+        private int RecTiming = 100;
         private int ArrayCount = 0;
 
 
         private string SteerLog = "";
         private double nowSteer = 0;
         private Vector3 nowVector;
+
+        public Vector3 dir = new Vector3();
         private List<Vector3> SteerList = new List<Vector3>();
         private List<Vector3> PosList = new List<Vector3>();
 
@@ -102,6 +105,20 @@ namespace UnityStandardAssets.Vehicles.Car
 
         private double guideAngle = 0;
         private int guideAngleInt = 0;
+
+
+        //計算用
+        public List<Vector3> IdealVec3 = new List<Vector3>();
+        //private List<Vector3> calcList = new List<Vector3>();
+ 
+        public CSVReader CSVReader;
+        private List<Vector3> otehonVec ;
+
+
+        private double cos = 0;
+        private double sin = 0;
+
+        private double x, y, a, b;
 
         public enum GearType
         {
@@ -114,7 +131,7 @@ namespace UnityStandardAssets.Vehicles.Car
 
         #endregion Field
 
-        public toyota_osc() : base()
+        public Toyota_osc() : base()
         {
             Gear = GearType.Backward;
         }
@@ -122,6 +139,8 @@ namespace UnityStandardAssets.Vehicles.Car
 
         void Start()
         {
+            CSVReader = GetComponent<CSVReader>();
+
             OSCHandler.Instance.Init(this.serverId, this.serverIp, this.serverPort);
             ShowDebugLog();
 
@@ -138,15 +157,18 @@ namespace UnityStandardAssets.Vehicles.Car
 
         }
 
-        // Update is called once per frame
-        void Update()
+     
+
+
+            // Update is called once per frame
+            void Update()
         {
             RecCount++;
 
             Vector3 tmp = GameObject.Find("Car").transform.position;
             GameObject.Find("Car").transform.position = new Vector3(tmp.x, tmp.y, tmp.z);
 
-            PosList.Add(tmp);
+            
 
             // if (Input.GetKeyDown(this.debugKey))
             // {
@@ -155,8 +177,8 @@ namespace UnityStandardAssets.Vehicles.Car
 
             if (Input.GetKeyDown(KeyCode.R))
             {
-                // Debug.Log("SteerLog = " + SteerLog);
-                // SteerLog = "";
+                 Debug.Log(SteerLog);
+                 SteerLog = "";
 
                 //vector
                 StreamWriter sw;
@@ -166,8 +188,6 @@ namespace UnityStandardAssets.Vehicles.Car
                 filename = filename.Replace("/", "_");
                 filename = filename.Replace(":", "_");
                 filename = filename.Replace(" ", "_");
-
-                Debug.Log("filename=" + filename);
 
                 fi = new FileInfo(Application.dataPath + "/"+filename+".txt");
                 sw = fi.AppendText();
@@ -182,6 +202,7 @@ namespace UnityStandardAssets.Vehicles.Car
                 sw.Flush();
                 sw.Close();
 
+                Debug.Log("filename=" + filename);
                 Debug.Log("CSVファイルを出力しました。");
 
             }
@@ -219,14 +240,14 @@ namespace UnityStandardAssets.Vehicles.Car
             SerialConnection.sendData = sendData;
             SerialConnection.Send();
 
-            Debug.Log("update + " + sendData);
+            //Debug.Log("update + " + sendData);
 
 
 
-            //Nフレームに1回 記録と配列読み込み
+            //Nフレームに1回 記録と配列読み込み//計算
             if (RecCount % RecTiming == 0) {
-                //お手本データがなくなったらガイド無くす処理をかく
-                
+
+
                 //記録用　現在の舵角取得
                 nowSteer = CrossPlatformInputManager.GetAxis("Horizontal");
                 //舵角の記録
@@ -235,9 +256,9 @@ namespace UnityStandardAssets.Vehicles.Car
 
 
                 //お手本データ
-                guideAngle = Double.Parse(GetComponent<CSVReader>().GuideArray[ArrayCount]);
+                //guideAngle = Double.Parse(GetComponent<CSVReader>().GuideArray[ArrayCount]);
                 //お手本データ*74
-                guideAngleInt = (int)(guideAngle * 74.0);
+                //guideAngleInt = (int)(guideAngle * 74.0);
 
                 //向きベクトル取得
                 float angleDir = transform.eulerAngles.z * (Mathf.PI / 180.0f);
@@ -245,18 +266,74 @@ namespace UnityStandardAssets.Vehicles.Car
 
                 SteerList.Add(dir);
 
-                
+                PosList.Add(tmp);
 
-                
+                //Debug.Log("AddList!");
+
+
                 //
                 //VecterLog += tmp;
-                sendData = 400 + guideAngleInt + "\n";
+                //sendData = 400 + guideAngleInt + "\n";
 
-                SerialConnection.sendData = sendData;
-                SerialConnection.Send();
+                //SerialConnection.sendData = sendData;
+                //SerialConnection.Send();
 
-                Debug.Log("otehon = " + sendData);
+                //Debug.Log("otehon = " + sendData);
 
+
+
+
+
+                //vector no keisan いまの理想ベクトル算出
+                otehonVec = CSVReader.SteerVec3;
+                //for (int i = 0; i < otehonVec.Count; i++)
+                //{
+                //    x = dir.x;
+                //    y = dir.y;
+
+                //    a = otehonVec[i].x;
+                //    b = otehonVec[i].y;
+
+                //    cos = a * x + b * y;
+                //    sin = Math.Sqrt(1 - Math.Pow(cos, 2));
+
+                //    float idx = (float)(a * cos + b * sin);
+                //    float idy = (float)(-a * sin + b * cos);
+
+                //    //Debug.Log("Ideal="+ "("+idx+"," +idy+","+ 0+")");
+
+                //    Vector3 IdVec = new Vector3(idx, idy, 0);
+                //    Debug.Log("IdealVector="+ IdVec);
+                //    IdealVec3.Add(IdVec);//リストにする必要ある？？なくない？
+                //}
+
+                
+                    x = dir.x;
+                    y = dir.y;
+
+                    a = otehonVec[ArrayCount].x;
+                    b = otehonVec[ArrayCount].y;
+
+                    cos = a * x + b * y;
+                    sin = Math.Sqrt(1 - Math.Pow(cos, 2));
+
+                    float idx = (float)(a * cos + b * sin);
+                    float idy = (float)(-a * sin + b * cos);
+
+                    //int q = 1; int w = 2; int e = 3;
+
+                    Debug.Log("Ideal="+ "("+idx+"," +idy+","+ 0+")");//ちゃんとでる
+
+                    //Vector3 IdVec = new Vector3(idx, idy, 0);
+                    //Vector3 testvec = new Vector3(q, w, e);
+                    Debug.Log("IdealVector=" + IdVec);//おかしい
+
+
+
+                    //IdealVec3.Add(IdVec);//リストにする必要ある？？なくない？
+
+
+                //Update終わり
                 ArrayCount++;
             }
 
@@ -267,10 +344,15 @@ namespace UnityStandardAssets.Vehicles.Car
             SerialConnection.sendData = sendData;
             SerialConnection.Send();
 
-            Debug.Log("current rot = " + sendData);
+            //Debug.Log("current rot = " + sendData);
 
 
 
+        }
+
+        private void Calc(Vector3 dir, List<Vector3> otehonVec)
+        {
+            throw new NotImplementedException();
         }
 
         //private void SendDebugMessageToClient()
@@ -345,19 +427,6 @@ namespace UnityStandardAssets.Vehicles.Car
             float footbrake = Mathf.Clamp(CrossPlatformInputManager.GetAxis("Vertical"), -1, 0);
 
 
-            //if (Gear == GearType.Forward)
-            //{
-            //    velocity *= -1;
-
-            //    if (velocity <= 0.01)
-            //    {
-            //        velocity = 0;
-            //    }
-            //}
-
-
-            //Debug.Log("velocity = " + velocity + "footbrake = " + footbrake);
-
 
 #if !MOBILE_INPUT
             float handbrake = CrossPlatformInputManager.GetAxis("Jump");
@@ -370,4 +439,10 @@ namespace UnityStandardAssets.Vehicles.Car
 #endif
         }
     }
+
+
+        
+   
+
+
 }

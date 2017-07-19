@@ -161,9 +161,7 @@
     <Compile Include="Assets\UnityOSC\Editor\OSCHelper.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Assets\7_12_2017_4_46_40_PM.txt" />
-    <None Include="Assets\7_12_2017_4_48_18_PM.txt" />
-    <None Include="Assets\7_12_2017_4_51_49_PM.txt" />
+    <None Include="Assets\7_19_2017_2_03_13_PM.txt" />
     <None Include="Assets\EasyRoads3D Free\Release Notes.txt" />
     <None Include="Assets\EasyRoads3D Free\Shaders\EasyRoads3D Marker.shader" />
     <None Include="Assets\EasyRoads3D Free\Shaders\EasyRoads3D-Alpha-BumpSpec.shader" />
@@ -179,6 +177,9 @@
     <None Include="Assets\EasyRoads3D Free\Shaders\surfaceAlpha.shader" />
     <None Include="Assets\EasyRoads3D Free\_Readme.txt" />
     <None Include="Assets\EasyRoads3D Free\_readme 1.txt" />
+    <None Include="Assets\Resources\7_14_2017_7_17_48_PM.txt" />
+    <None Include="Assets\Resources\7_14_2017_8_11_16.txt" />
+    <None Include="Assets\Resources\7_14_2017_8_11_16_PM.txt" />
     <None Include="Assets\SampleScenes\Materials\kagami.shader" />
     <None Include="Assets\SampleScenes\Shaders\Skybox-Procedural.shader" />
     <None Include="Assets\Standard Assets\Cameras\CameraGuidelines.txt" />
